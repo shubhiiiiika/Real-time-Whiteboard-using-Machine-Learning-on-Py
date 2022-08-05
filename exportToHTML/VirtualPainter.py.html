@@ -1,0 +1,141 @@
+<html>
+<head>
+<title>VirtualPainter.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #808080;}
+.s3 { color: #6897bb;}
+.s4 { color: #6a8759;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+VirtualPainter.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">cv2</span>
+<span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<span class="s0">import </span><span class="s1">time</span>
+<span class="s0">import </span><span class="s1">os</span>
+<span class="s0">import </span><span class="s1">HandTrackingM </span><span class="s0">as </span><span class="s1">htm</span>
+
+<span class="s2">######################</span>
+<span class="s1">brushThickness = </span><span class="s3">5</span>
+<span class="s1">eraserThickness = </span><span class="s3">70</span>
+
+<span class="s2">######################</span>
+<span class="s1">xp</span><span class="s0">, </span><span class="s1">yp = </span><span class="s3">0</span><span class="s0">, </span><span class="s3">0</span>
+<span class="s1">imgCanvas = np.zeros((</span><span class="s3">720</span><span class="s0">, </span><span class="s3">1280</span><span class="s0">, </span><span class="s3">3</span><span class="s1">)</span><span class="s0">, </span><span class="s1">np.uint8)</span>
+
+<span class="s1">folderPath = </span><span class="s4">&quot;Header&quot;</span>
+<span class="s1">myList = os.listdir(folderPath)</span>
+<span class="s1">print(myList)</span>
+<span class="s1">overlaylist = []</span>
+
+<span class="s0">for </span><span class="s1">imPath </span><span class="s0">in </span><span class="s1">myList:</span>
+    <span class="s1">image = cv2.imread(</span><span class="s4">f'</span><span class="s0">{</span><span class="s1">folderPath</span><span class="s0">}</span><span class="s4">/</span><span class="s0">{</span><span class="s1">imPath</span><span class="s0">}</span><span class="s4">'</span><span class="s1">)</span>
+    <span class="s1">overlaylist.append(image)</span>
+<span class="s1">print(len(overlaylist))   </span><span class="s2"># to see whether we've imported all images correctly or not shows numbers of images</span>
+<span class="s1">header = overlaylist[</span><span class="s3">0</span><span class="s1">]   </span><span class="s2"># calling over image as header which overlays on each other</span>
+<span class="s1">drawColor = (</span><span class="s3">255</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s3">255</span><span class="s1">)</span>
+
+<span class="s1">cap = cv2.VideoCapture(</span><span class="s3">0</span><span class="s1">)</span>
+<span class="s1">cap.set(</span><span class="s3">3</span><span class="s0">, </span><span class="s3">1200</span><span class="s1">)  </span><span class="s2"># frame size</span>
+<span class="s1">cap.set(</span><span class="s3">4</span><span class="s0">, </span><span class="s3">720</span><span class="s1">)</span>
+
+<span class="s1">detector = htm.handDetector(detectionCon=</span><span class="s3">0.05</span><span class="s1">)  </span><span class="s2"># def value is 0.5</span>
+<span class="s0">while True</span><span class="s1">:</span>
+    <span class="s2"># 1. Import image</span>
+    <span class="s1">success</span><span class="s0">, </span><span class="s1">img = cap.read()</span>
+    <span class="s2"># for importing image we've to flip</span>
+    <span class="s2"># flip horizontally because mirror image</span>
+    <span class="s1">img = cv2.flip(img</span><span class="s0">, </span><span class="s3">1</span><span class="s1">)</span>
+
+    <span class="s2"># 2. Find hand landmarks: done thru hand tracking module</span>
+    <span class="s1">img = detector.findHands(img)</span>
+    <span class="s2"># getting all landmark positions</span>
+    <span class="s1">lnlist = detector.findPosition(img</span><span class="s0">, </span><span class="s1">draw=</span><span class="s0">False</span><span class="s1">)</span>
+
+    <span class="s2">#check</span>
+    <span class="s0">if </span><span class="s1">len(lnlist)!=</span><span class="s3">0</span><span class="s1">:</span>
+
+       <span class="s2"># print(lnlist)</span>
+
+        <span class="s2"># tip of index and middle finger points</span>
+        <span class="s1">x1</span><span class="s0">, </span><span class="s1">y1 = lnlist[</span><span class="s3">8</span><span class="s1">][</span><span class="s3">1</span><span class="s1">:]</span>
+        <span class="s1">x2</span><span class="s0">, </span><span class="s1">y2 = lnlist[</span><span class="s3">12</span><span class="s1">][</span><span class="s3">1</span><span class="s1">:]</span>
+    <span class="s2"># 3. Checking which fingers are up index, middle</span>
+
+        <span class="s1">fingers = detector.fingersUp()</span>
+        <span class="s2">#print(fingers)</span>
+    <span class="s2"># To draw only one finger i.e index finger should be up to ot both fingers</span>
+    <span class="s2"># 4. if selection mode - two fingers are up: we've to select not draw</span>
+        <span class="s0">if </span><span class="s1">fingers[</span><span class="s3">1</span><span class="s1">] </span><span class="s0">and </span><span class="s1">fingers[</span><span class="s3">2</span><span class="s1">]:</span>
+            <span class="s1">xp</span><span class="s0">, </span><span class="s1">yp = </span><span class="s3">0</span><span class="s0">, </span><span class="s3">0</span>
+
+            <span class="s1">cv2.rectangle(img</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y1 - </span><span class="s3">15</span><span class="s1">)</span><span class="s0">, </span><span class="s1">(x2</span><span class="s0">, </span><span class="s1">y2 + </span><span class="s3">15</span><span class="s1">)</span><span class="s0">, </span><span class="s1">drawColor</span><span class="s0">, </span><span class="s1">cv2.FILLED)</span>
+            <span class="s1">print(</span><span class="s4">'Selection Mode'</span><span class="s1">)</span>
+           <span class="s2"># checking for the click</span>
+           <span class="s2"># if we're at the top of the image</span>
+        <span class="s0">if </span><span class="s1">y1 &lt; </span><span class="s3">125</span><span class="s1">:</span>
+            <span class="s0">if </span><span class="s3">250 </span><span class="s1">&lt; x1 &lt; </span><span class="s3">450</span><span class="s1">:</span>
+                <span class="s1">header = overlaylist[</span><span class="s3">0</span><span class="s1">]</span>
+                <span class="s1">drawColor= (</span><span class="s3">255</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s3">255</span><span class="s1">)</span>
+            <span class="s0">elif </span><span class="s3">550 </span><span class="s1">&lt; x1 &lt; </span><span class="s3">750</span><span class="s1">:</span>
+                <span class="s1">header = overlaylist[</span><span class="s3">1</span><span class="s1">]</span>
+                <span class="s1">drawColor = (</span><span class="s3">255</span><span class="s0">, </span><span class="s3">255</span><span class="s0">, </span><span class="s3">255</span><span class="s1">)</span>
+            <span class="s0">elif </span><span class="s3">800 </span><span class="s1">&lt; x1 &lt; </span><span class="s3">950</span><span class="s1">:</span>
+                <span class="s1">header = overlaylist[</span><span class="s3">2</span><span class="s1">]</span>
+                <span class="s1">drawColor = (</span><span class="s3">0</span><span class="s0">, </span><span class="s3">255</span><span class="s0">, </span><span class="s3">0</span><span class="s1">)</span>
+            <span class="s0">elif </span><span class="s3">1050 </span><span class="s1">&lt; x1 &lt; </span><span class="s3">1200</span><span class="s1">:</span>
+                <span class="s1">header = overlaylist[</span><span class="s3">3</span><span class="s1">]</span>
+                <span class="s1">drawColor = (</span><span class="s3">0</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s3">0</span><span class="s1">)</span>
+
+
+    <span class="s2"># 5. if drawing mode - index finger is up</span>
+        <span class="s0">if </span><span class="s1">fingers[</span><span class="s3">1</span><span class="s1">] </span><span class="s0">and </span><span class="s1">fingers[</span><span class="s3">2</span><span class="s1">] == </span><span class="s0">False</span><span class="s1">:</span>
+            <span class="s1">cv2.circle(img</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y1)</span><span class="s0">, </span><span class="s3">15</span><span class="s0">, </span><span class="s1">drawColor</span><span class="s0">, </span><span class="s1">cv2.FILLED)</span>
+            <span class="s1">print(</span><span class="s4">'Drawing Mode'</span><span class="s1">)</span>
+            <span class="s0">if </span><span class="s1">xp == </span><span class="s3">0 </span><span class="s0">and </span><span class="s1">yp == </span><span class="s3">0</span><span class="s1">:</span>
+                <span class="s1">xp</span><span class="s0">, </span><span class="s1">yp = x1</span><span class="s0">, </span><span class="s1">y1</span>
+
+            <span class="s0">if </span><span class="s1">drawColor == (</span><span class="s3">0</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s3">0</span><span class="s1">):</span>
+                <span class="s1">cv2.line(img</span><span class="s0">, </span><span class="s1">(xp</span><span class="s0">, </span><span class="s1">yp)</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y1)</span><span class="s0">, </span><span class="s1">drawColor</span><span class="s0">, </span><span class="s1">eraserThickness)</span>
+                <span class="s1">cv2.line(imgCanvas</span><span class="s0">, </span><span class="s1">(xp</span><span class="s0">, </span><span class="s1">yp)</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y1)</span><span class="s0">, </span><span class="s1">drawColor</span><span class="s0">, </span><span class="s1">eraserThickness)</span>
+            <span class="s0">else</span><span class="s1">:</span>
+                <span class="s1">cv2.line(img</span><span class="s0">, </span><span class="s1">(xp</span><span class="s0">, </span><span class="s1">yp)</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y1)</span><span class="s0">, </span><span class="s1">drawColor</span><span class="s0">, </span><span class="s1">brushThickness)</span>
+                <span class="s1">cv2.line(imgCanvas</span><span class="s0">, </span><span class="s1">(xp</span><span class="s0">, </span><span class="s1">yp)</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y1)</span><span class="s0">, </span><span class="s1">drawColor</span><span class="s0">, </span><span class="s1">brushThickness)</span>
+
+            <span class="s2">#as we're taking start point and end point</span>
+            <span class="s2">#here previous point = new point there it will draw as point now not line</span>
+
+            <span class="s1">cv2.line(img</span><span class="s0">,</span><span class="s1">(xp</span><span class="s0">,</span><span class="s1">yp)</span><span class="s0">,</span><span class="s1">(x1</span><span class="s0">,</span><span class="s1">y1)</span><span class="s0">,</span><span class="s1">drawColor</span><span class="s0">,</span><span class="s1">brushThickness)</span>
+            <span class="s1">cv2.line(imgCanvas</span><span class="s0">, </span><span class="s1">(xp</span><span class="s0">, </span><span class="s1">yp)</span><span class="s0">, </span><span class="s1">(x1</span><span class="s0">, </span><span class="s1">y1)</span><span class="s0">, </span><span class="s1">drawColor</span><span class="s0">, </span><span class="s1">brushThickness)</span>
+            <span class="s1">xp</span><span class="s0">, </span><span class="s1">yp = x1</span><span class="s0">, </span><span class="s1">y1</span>
+            <span class="s2"># the points will keep updating</span>
+            <span class="s2"># previous position to new position</span>
+    <span class="s1">imgGrey = cv2.cvtColor(imgCanvas</span><span class="s0">, </span><span class="s1">cv2.COLOR_BGR2GRAY)</span>
+    <span class="s2">#CONVERTING INTO BINARY IMAGE and inversing it</span>
+    <span class="s1">_</span><span class="s0">, </span><span class="s1">imgInv = cv2.threshold(imgGrey</span><span class="s0">, </span><span class="s3">50</span><span class="s0">, </span><span class="s3">255</span><span class="s0">, </span><span class="s1">cv2.THRESH_BINARY_INV)</span>
+    <span class="s1">imgInv = cv2.cvtColor(imgInv</span><span class="s0">, </span><span class="s1">cv2.COLOR_GRAY2BGR)  </span><span class="s2"># adding to og image</span>
+    <span class="s1">img = cv2.bitwise_and(img</span><span class="s0">, </span><span class="s1">imgInv)</span>
+    <span class="s1">img = cv2.bitwise_or(img</span><span class="s0">, </span><span class="s1">imgCanvas)</span>
+
+
+
+
+<span class="s2"># Setting the header image</span>
+<span class="s2"># because our image is matrix we just need to define the location of this new image overlaying, so will slice it</span>
+    <span class="s1">img[</span><span class="s3">0</span><span class="s1">:</span><span class="s3">125</span><span class="s0">, </span><span class="s3">0</span><span class="s1">:</span><span class="s3">1280</span><span class="s1">] = header  </span><span class="s2"># img[height,width]</span>
+ <span class="s2">#   img = cv2.addWeighted(img, 0.5, imgCanvas, 0.5, 0)</span>
+
+    <span class="s1">cv2.imshow(</span><span class="s4">&quot;Image&quot;</span><span class="s0">, </span><span class="s1">img)</span>
+    <span class="s2"># cv2.imshow(&quot;Canvas&quot;, imgCanvas)</span>
+    <span class="s1">cv2.waitKey(</span><span class="s3">1</span><span class="s1">)</span>
+
+</pre>
+</body>
+</html>

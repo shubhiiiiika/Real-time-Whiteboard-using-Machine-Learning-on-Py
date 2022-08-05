@@ -1,0 +1,43 @@
+<html>
+<head>
+<title>HandTrackingMin.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6897bb;}
+.s3 { color: #808080;}
+.s4 { color: #6a8759;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+HandTrackingMin.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">cv2</span>
+<span class="s0">import </span><span class="s1">mediapipe </span><span class="s0">as </span><span class="s1">mp</span>
+<span class="s0">import </span><span class="s1">time</span>
+
+<span class="s1">cap = cv2.VideoCapture(</span><span class="s2">0</span><span class="s1">)</span>
+
+<span class="s1">mpHands = mp.solutions.hands</span>
+<span class="s1">hands = mpHands.Hands()</span>
+<span class="s1">mpDraw = mp.solutions.drawing_utils</span>
+
+<span class="s0">while True</span><span class="s1">:</span>
+    <span class="s1">success</span><span class="s0">, </span><span class="s1">img = cap.read()</span>
+    <span class="s1">imgRGB = cv2.cvtColor(img</span><span class="s0">,</span><span class="s1">cv2.COLOR_BGR2RGB)</span>
+    <span class="s1">results = hands.process(imgRGB)</span>
+    <span class="s3">#print(results.multi_hand_landmarks)</span>
+    <span class="s0">if </span><span class="s1">results.multi_hand_landmarks:</span>
+        <span class="s0">for </span><span class="s1">handlms </span><span class="s0">in </span><span class="s1">results.multi_hand_landmarks:</span>
+            <span class="s1">mpDraw.draw_landmarks(img</span><span class="s0">,</span><span class="s1">handlms</span><span class="s0">, </span><span class="s1">mpHands.HAND_CONNECTIONS)</span>
+
+
+    <span class="s1">cv2.imshow(</span><span class="s4">&quot;Image&quot;</span><span class="s0">,</span><span class="s1">img)</span>
+    <span class="s1">cv2.waitKey(</span><span class="s2">1</span><span class="s1">)</span>
+</pre>
+</body>
+</html>

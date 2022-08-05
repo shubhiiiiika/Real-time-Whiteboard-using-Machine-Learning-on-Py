@@ -1,0 +1,122 @@
+<html>
+<head>
+<title>HandTrackingM.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #6897bb;}
+.s3 { color: #808080;}
+.s4 { color: #6a8759;}
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+HandTrackingM.py</font>
+</center></td></tr></table>
+<pre><span class="s0">import </span><span class="s1">cv2</span>
+<span class="s0">import </span><span class="s1">time</span>
+<span class="s0">import </span><span class="s1">mediapipe </span><span class="s0">as </span><span class="s1">mp</span>
+
+<span class="s0">class </span><span class="s1">handDetector():</span>
+    <span class="s0">def </span><span class="s1">__init__(self</span><span class="s0">, </span><span class="s1">mode=</span><span class="s0">False, </span><span class="s1">maxHands=</span><span class="s2">2</span><span class="s0">,</span><span class="s1">modelC=</span><span class="s2">1</span><span class="s0">, </span><span class="s1">detectionCon=</span><span class="s2">0.5</span><span class="s0">, </span><span class="s1">trackCon=</span><span class="s2">0.5</span><span class="s1">):</span>
+        <span class="s1">self.mode = mode</span>
+        <span class="s1">self.maxHands = maxHands</span>
+        <span class="s1">self.modelC = modelC</span>
+        <span class="s1">self.detectionCon = detectionCon</span>
+        <span class="s1">self.trackCon = trackCon</span>
+
+        <span class="s1">self.mpHands = mp.solutions.hands</span>
+        <span class="s1">self.hands = self.mpHands.Hands(self.mode</span><span class="s0">, </span><span class="s1">self.maxHands</span><span class="s0">,</span><span class="s1">self.modelC</span><span class="s0">, </span><span class="s1">self.detectionCon</span><span class="s0">, </span><span class="s1">self.trackCon)</span>
+        <span class="s1">self.mpDraw = mp.solutions.drawing_utils</span>
+        <span class="s1">self.tipIds = [</span><span class="s2">4</span><span class="s0">, </span><span class="s2">8</span><span class="s0">, </span><span class="s2">12</span><span class="s0">, </span><span class="s2">16</span><span class="s0">, </span><span class="s2">20</span><span class="s1">]</span>
+
+    <span class="s0">def </span><span class="s1">findHands(self</span><span class="s0">, </span><span class="s1">img</span><span class="s0">, </span><span class="s1">draw=</span><span class="s0">True</span><span class="s1">):</span>
+        <span class="s1">imgRGB = cv2.cvtColor(img</span><span class="s0">, </span><span class="s1">cv2.COLOR_BGR2RGB)</span>
+        <span class="s1">self.result = self.hands.process(imgRGB)</span>
+        <span class="s3">#print(self.result.multi_hand_landmarks)</span>
+
+        <span class="s0">if </span><span class="s1">self.result.multi_hand_landmarks:</span>
+            <span class="s0">for </span><span class="s1">handLand </span><span class="s0">in </span><span class="s1">self.result.multi_hand_landmarks:</span>
+                <span class="s0">if </span><span class="s1">draw:</span>
+                    <span class="s1">self.mpDraw.draw_landmarks(img</span><span class="s0">, </span><span class="s1">handLand</span><span class="s0">, </span><span class="s1">self.mpHands.HAND_CONNECTIONS)</span>
+
+        <span class="s0">return </span><span class="s1">img</span>
+
+    <span class="s0">def </span><span class="s1">findPosition(self</span><span class="s0">, </span><span class="s1">img</span><span class="s0">, </span><span class="s1">handNo=</span><span class="s2">0</span><span class="s0">, </span><span class="s1">draw=</span><span class="s0">True</span><span class="s1">):</span>
+
+        <span class="s1">self.lmList = []</span>
+        <span class="s0">if </span><span class="s1">self.result.multi_hand_landmarks:</span>
+            <span class="s1">myHand = self.result.multi_hand_landmarks[handNo]</span>
+            <span class="s0">for </span><span class="s1">id</span><span class="s0">, </span><span class="s1">lm </span><span class="s0">in </span><span class="s1">enumerate(myHand.landmark):</span>
+                <span class="s1">h</span><span class="s0">, </span><span class="s1">w</span><span class="s0">, </span><span class="s1">c = img.shape</span>
+                <span class="s1">cx</span><span class="s0">, </span><span class="s1">cy = int(lm.x * w)</span><span class="s0">, </span><span class="s1">int(lm.y * h)</span>
+                <span class="s1">self.lmList.append([id</span><span class="s0">, </span><span class="s1">cx</span><span class="s0">, </span><span class="s1">cy])</span>
+
+                <span class="s0">if </span><span class="s1">draw:</span>
+                    <span class="s1">cv2.circle(img</span><span class="s0">, </span><span class="s1">(cx</span><span class="s0">, </span><span class="s1">cy)</span><span class="s0">, </span><span class="s2">4</span><span class="s0">, </span><span class="s1">(</span><span class="s2">255</span><span class="s0">, </span><span class="s2">0</span><span class="s0">, </span><span class="s2">0</span><span class="s1">)</span><span class="s0">, </span><span class="s1">cv2.FILLED)</span>
+        <span class="s0">return </span><span class="s1">self.lmList</span>
+
+
+    <span class="s0">def </span><span class="s1">fingersUp(self):</span>
+        <span class="s1">fingers = []</span>
+        <span class="s3"># Thumb</span>
+        <span class="s0">if </span><span class="s1">self.lmList[self.tipIds[</span><span class="s2">0</span><span class="s1">]][</span><span class="s2">1</span><span class="s1">] &lt; self.lmList[self.tipIds[</span><span class="s2">0</span><span class="s1">] - </span><span class="s2">1</span><span class="s1">][</span><span class="s2">1</span><span class="s1">]:</span>
+            <span class="s1">fingers.append(</span><span class="s2">1</span><span class="s1">)</span>
+        <span class="s0">else</span><span class="s1">:</span>
+            <span class="s1">fingers.append(</span><span class="s2">0</span><span class="s1">)</span>
+
+        <span class="s3"># Fingers</span>
+        <span class="s0">for </span><span class="s1">id </span><span class="s0">in </span><span class="s1">range(</span><span class="s2">1</span><span class="s0">, </span><span class="s2">5</span><span class="s1">):</span>
+            <span class="s0">if </span><span class="s1">self.lmList[self.tipIds[id]][</span><span class="s2">2</span><span class="s1">] &lt; self.lmList[self.tipIds[id] - </span><span class="s2">2</span><span class="s1">][</span><span class="s2">2</span><span class="s1">]:</span>
+                <span class="s1">fingers.append(</span><span class="s2">1</span><span class="s1">)  </span><span class="s3">#open</span>
+            <span class="s0">else</span><span class="s1">:</span>
+                <span class="s1">fingers.append(</span><span class="s2">0</span><span class="s1">)  </span><span class="s3">#closed</span>
+        <span class="s0">return </span><span class="s1">fingers   </span><span class="s3"># shows which fingers are up or not</span>
+
+<span class="s0">def </span><span class="s1">main():</span>
+    <span class="s1">pTime = </span><span class="s2">0</span>
+    <span class="s1">cTime = </span><span class="s2">0</span>
+    <span class="s1">cap = cv2.VideoCapture(</span><span class="s2">0</span><span class="s1">)</span>
+    <span class="s1">detector = handDetector()</span>
+
+    <span class="s0">while True</span><span class="s1">:</span>
+        <span class="s1">success</span><span class="s0">, </span><span class="s1">img = cap.read()</span>
+        <span class="s1">img = detector.findHands(img)</span>
+        <span class="s1">PosList = detector.findPosition(img)</span>
+
+        <span class="s0">if </span><span class="s1">len(PosList) != </span><span class="s2">0</span><span class="s1">:</span>
+         <span class="s1">print(PosList[</span><span class="s2">8</span><span class="s1">])</span>
+
+        <span class="s1">img = cv2.flip(img</span><span class="s0">, </span><span class="s2">1</span><span class="s1">)</span>
+        <span class="s1">cTime = time.time()</span>
+        <span class="s1">fps = </span><span class="s2">1 </span><span class="s1">/ (cTime - pTime)</span>
+        <span class="s1">pTime = cTime</span>
+
+        <span class="s1">cv2.putText(img</span><span class="s0">, </span><span class="s1">str(int(fps))</span><span class="s0">, </span><span class="s1">(</span><span class="s2">7</span><span class="s0">, </span><span class="s2">25</span><span class="s1">)</span><span class="s0">, </span><span class="s1">cv2.FONT_HERSHEY_DUPLEX</span><span class="s0">, </span><span class="s2">1</span><span class="s0">, </span><span class="s1">(</span><span class="s2">0</span><span class="s0">, </span><span class="s2">0</span><span class="s0">, </span><span class="s2">0</span><span class="s1">)</span><span class="s0">, </span><span class="s2">1</span><span class="s1">)</span>
+
+
+        <span class="s1">cv2.imshow(</span><span class="s4">&quot;Webcam&quot;</span><span class="s0">, </span><span class="s1">img)</span>
+        <span class="s0">if </span><span class="s1">cv2.waitKey(</span><span class="s2">1</span><span class="s1">) &amp; </span><span class="s2">0XFF </span><span class="s1">== ord(</span><span class="s4">'x'</span><span class="s1">):</span>
+            <span class="s0">break</span>
+
+
+<span class="s0">if </span><span class="s1">__name__ == </span><span class="s4">&quot;__main__&quot;</span><span class="s1">:</span>
+    <span class="s1">main()</span>
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</body>
+</html>
